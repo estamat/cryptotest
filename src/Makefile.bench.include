@@ -1,0 +1,45 @@
+bin_PROGRAMS += bench/bench_wiki
+BENCH_SRCDIR = bench
+BENCH_BINARY = bench/bench_wiki$(EXEEXT)
+
+
+bench_bench_wiki_SOURCES = \
+  bench/bench_wiki.cpp \
+  bench/bench.cpp \
+  bench/bench.h \
+  bench/Examples.cpp
+
+bench_bench_wiki_CPPFLAGS = $(AM_CPPFLAGS) $(WIKI_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_wiki_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bench_bench_wiki_LDADD = \
+  $(LIBWIKI_SERVER) \
+  $(LIBWIKI_COMMON) \
+  $(LIBWIKI_UTIL) \
+  $(LIBWIKI_CRYPTO) \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV) \
+  $(LIBSECP256K1) \
+  $(LIBUNIVALUE)
+
+if ENABLE_ZMQ
+bench_bench_wiki_LDADD += $(LIBWIKI_ZMQ) $(ZMQ_LIBS)
+endif
+
+if ENABLE_WALLET
+bench_bench_wiki_LDADD += $(LIBWIKI_WALLET)
+endif
+
+bench_bench_wiki_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+bench_bench_wiki_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+CLEAN_WIKI_BENCH = bench/*.gcda bench/*.gcno
+
+CLEANFILES += $(CLEAN_WIKI_BENCH)
+
+wiki_bench: $(BENCH_BINARY)
+
+bench: $(BENCH_BINARY) FORCE
+	$(BENCH_BINARY)
+
+wiki_bench_clean : FORCE
+	rm -f $(CLEAN_WIKI_BENCH) $(bench_bench_wiki_OBJECTS) $(BENCH_BINARY)

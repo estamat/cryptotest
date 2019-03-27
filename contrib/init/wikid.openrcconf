@@ -1,0 +1,33 @@
+# /etc/conf.d/wikid: config file for /etc/init.d/wikid
+
+# Config file location
+#WIKID_CONFIGFILE="/etc/wikicore/wiki.conf"
+
+# What directory to write pidfile to?  (created and owned by $WIKID_USER)
+#WIKID_PIDDIR="/var/run/wikid"
+
+# What filename to give the pidfile
+#WIKID_PIDFILE="${WIKID_PIDDIR}/wikid.pid"
+
+# Where to write wikid data (be mindful that the blockchain is large)
+#WIKID_DATADIR="/var/lib/wikid"
+
+# User and group to own wikid process
+#WIKID_USER="wikicore"
+#WIKID_GROUP="wikicore"
+
+# Path to wikid executable
+#WIKID_BIN="/usr/bin/wikid"
+
+# Nice value to run wikid under
+#WIKID_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+WIKID_OPTS="-disablewallet"
+
+# The timeout in seconds OpenRC will wait for wikid to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+WIKID_SIGTERM_TIMEOUT=60

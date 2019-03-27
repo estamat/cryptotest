@@ -1,0 +1,92 @@
+#!/sbin/runscript
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/wikicore/.wikicore" ]; then
+	WIKID_DEFAULT_DATADIR="/var/lib/wikicore/.wikicore"
+else
+	WIKID_DEFAULT_DATADIR="/var/lib/wikid"
+fi
+
+WIKID_CONFIGFILE=${WIKID_CONFIGFILE:-/etc/wikicore/wiki.conf}
+WIKID_PIDDIR=${WIKID_PIDDIR:-/var/run/wikid}
+WIKID_PIDFILE=${WIKID_PIDFILE:-${WIKID_PIDDIR}/wikid.pid}
+WIKID_DATADIR=${WIKID_DATADIR:-${WIKID_DEFAULT_DATADIR}}
+WIKID_USER=${WIKID_USER:-${WIKI_USER:-wikicore}}
+WIKID_GROUP=${WIKID_GROUP:-wikicore}
+WIKID_BIN=${WIKID_BIN:-/usr/bin/wikid}
+WIKID_NICE=${WIKID_NICE:-${NICELEVEL:-0}}
+WIKID_OPTS="${WIKID_OPTS:-${WIKI_OPTS}}"
+
+name="WIKI Core Daemon"
+description="WIKI cryptocurrency P2P network daemon"
+
+command="/usr/bin/wikid"
+command_args="-pid=\"${WIKID_PIDFILE}\" \
+		-conf=\"${WIKID_CONFIGFILE}\" \
+		-datadir=\"${WIKID_DATADIR}\" \
+		-daemon \
+		${WIKID_OPTS}"
+
+required_files="${WIKID_CONFIGFILE}"
+start_stop_daemon_args="-u ${WIKID_USER} \
+			-N ${WIKID_NICE} -w 2000"
+pidfile="${WIKID_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${WIKID_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${WIKID_USER}:${WIKID_GROUP}" \
+	"${WIKID_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${WIKID_USER}:${WIKID_GROUP}" \
+	"${WIKID_PIDDIR}"
+
+	checkpath -f \
+	-o ${WIKID_USER}:${WIKID_GROUP} \
+	-m 0660 \
+	${WIKID_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${WIKID_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run wikid."
+		eerror "The setting must appear in ${WIKID_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following"
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is also recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"WIKI Core Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

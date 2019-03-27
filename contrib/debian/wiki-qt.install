@@ -1,0 +1,6 @@
+usr/local/bin/wiki-qt usr/bin
+share/pixmaps/wiki32.xpm usr/share/pixmaps
+share/pixmaps/wiki16.xpm usr/share/pixmaps
+share/pixmaps/wiki128.png usr/share/pixmaps
+debian/wiki-qt.desktop usr/share/applications
+debian/wiki-qt.protocol usr/share/kde4/services/
